@@ -1,6 +1,8 @@
 const router = require("express").Router();
 let BeatSheet = require("../models/beat-sheet.model");
 
+const sanitizeBeatSheet = require("../utils/sanitize").sanitizeBeatSheet;
+
 // TODO: Add input validation and user authorization!!!
 
 // Get all Beat Sheets
@@ -40,6 +42,7 @@ router.route("/:id").get((req, res) => {
   const id = req.params.id;
   // TODO: Remove console.log
   console.log(`Looking for beat sheet with id ${id}`);
+
   // TODO: Only display beat sheet if authorized
   BeatSheet.findById(id)
     .then((beatSheet) => res.json(beatSheet))
@@ -57,6 +60,7 @@ router.route("/create").post((req, res) => {
   const author_id = req.body.author_id;
   const acts = req.body.acts;
 
+  // Create the new beat sheet
   const newBeatSheet = new BeatSheet({
     beat_sheet_name,
     beat_sheet_description,
@@ -64,6 +68,9 @@ router.route("/create").post((req, res) => {
     author_id,
     acts,
   });
+
+  // Sanitize new beat sheet before saving
+  newBeatSheet = sanitizeBeatSheet(newBeatSheet);
 
   newBeatSheet
     .save()
@@ -79,10 +86,15 @@ router.route("/update/:id").post((req, res) => {
   // TODO: Only update beat sheet if authorized
   BeatSheet.findById(id)
     .then((beatSheet) => {
+      // Update sheet values
       beatSheet.beat_sheet_name = req.body.beat_sheet_name;
       beatSheet.beat_sheet_description = req.body.beat_sheet_description;
+      beatSheet.author_username = req.body.author_username;
       beatSheet.author_id = req.body.author_id;
-      beatSheet.content = req.body.content;
+      beatSheet.acts = req.body.acts;
+
+      // Sanitize beat sheet
+      beatSheet = sanitizeBeatSheet(beatSheet);
 
       beatSheet
         .save()

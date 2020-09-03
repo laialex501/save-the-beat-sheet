@@ -6,9 +6,9 @@ const UserSchema = new Schema(
     username: {
       type: String,
       required: true,
-      unique: true,
-      trim: true,
-      minLength: 3,
+    },
+    googleID: {
+      type: String,
     },
   },
   { timestamps: true }
