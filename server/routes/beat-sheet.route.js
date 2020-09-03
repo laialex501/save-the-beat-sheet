@@ -1,12 +1,22 @@
 const router = require("express").Router();
 let BeatSheet = require("../models/beat-sheet.model");
+const isLoggedIn = require("../utils/auth-utils").isLoggedIn;
 
 const sanitizeBeatSheet = require("../utils/sanitize").sanitizeBeatSheet;
 
 // TODO: Add input validation and user authorization!!!
 
+// Get Beat Sheets
+router.route("/").get(isLoggedIn, (req, res) => {
+  console.log("Looking for beat sheets belonging to user " + req.user.username);
+  const username = req.body.username;
+  BeatSheet.find({ author_username: username })
+    .then((beatSheet) => res.json(beatSheet))
+    .catch((err) => res.status(400).json("Error: " + err));
+});
+
 // Get all Beat Sheets
-router.route("/").get((req, res) => {
+router.route("/api/all").get((req, res) => {
   // TODO: Remove console.log
   console.log("Looking for all beat sheets");
   // TODO: Only display authorized beat sheets
@@ -16,7 +26,7 @@ router.route("/").get((req, res) => {
 });
 
 // Get Beat Sheets by Username
-router.route("/users/:username").get((req, res) => {
+router.route("/api/users/:username").get((req, res) => {
   const username = req.params.username;
   // TODO: Remove console.log
   console.log(`Looking for beats sheets belonging to ${username}`);
@@ -27,7 +37,7 @@ router.route("/users/:username").get((req, res) => {
 });
 
 // Get Beat Sheets by Author_ID
-router.route("/users/id/:author_id").get((req, res) => {
+router.route("/api/users/id/:author_id").get((req, res) => {
   const author_id = req.params.author_id;
   // TODO: Remove console.log
   console.log(`Looking for beats sheets belonging to ${author_id}`);
@@ -38,7 +48,7 @@ router.route("/users/id/:author_id").get((req, res) => {
 });
 
 // Get Beat Sheet by ID
-router.route("/:id").get((req, res) => {
+router.route("/api/:id").get((req, res) => {
   const id = req.params.id;
   // TODO: Remove console.log
   console.log(`Looking for beat sheet with id ${id}`);
@@ -50,7 +60,7 @@ router.route("/:id").get((req, res) => {
 });
 
 // Create Beat Sheet
-router.route("/create").post((req, res) => {
+router.route("/api/create").post((req, res) => {
   // TODO: Remove console.log
   console.log(`Creating Beat Sheet with content ${req.body}`);
 
@@ -79,7 +89,7 @@ router.route("/create").post((req, res) => {
 });
 
 // Update Beat Sheet
-router.route("/update/:id").post((req, res) => {
+router.route("/api/update/:id").post((req, res) => {
   const id = req.params.id;
   // TODO: Remove console.log
   console.log(`Updating beat sheet with id ${id}`);
@@ -105,7 +115,7 @@ router.route("/update/:id").post((req, res) => {
 });
 
 // Delete Beat Sheet
-router.route("/:id").delete((req, res) => {
+router.route("/api/:id").delete((req, res) => {
   const id = req.params.id;
   // TODO: Remove console.log
   console.log(`Deleting beat sheet with id ${id}`);

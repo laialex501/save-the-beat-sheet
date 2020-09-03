@@ -46,10 +46,10 @@ const connection = mongoose.connection;
 connection.once("open", () => console.log("Successfully connected to MongoDB"));
 
 // Router config
-const welcomeRouter = require("./routes/welcome");
-const usersRouter = require("./routes/users");
-const beatSheetRouter = require("./routes/beatSheet");
-const authRouter = require("./routes/auth");
+const welcomeRouter = require("./routes/welcome.route");
+const usersRouter = require("./routes/users.route");
+const beatSheetRouter = require("./routes/beat-sheet.route");
+const authRouter = require("./routes/auth.route");
 
 // Set routes
 app.use("/", welcomeRouter);
