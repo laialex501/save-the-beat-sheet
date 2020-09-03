@@ -3,6 +3,9 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 
+// Allow use of environmental variables
+require("dotenv").config();
+
 const app = express();
 
 // Enable cross-origin resource sharing
@@ -12,11 +15,11 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // DB Config
-const db = require("./config/keys").mongoURI;
+const uri = process.env.MONGO_URI;
 
 // Connect to MongoDB
 mongoose
-  .connect(db, {
+  .connect(uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
