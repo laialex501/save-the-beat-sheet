@@ -8,56 +8,29 @@ import { v4 as uuidv4 } from "uuid";
 import CKEditor from "@ckeditor/ckeditor5-react";
 import { InlineEditor, MinimumEditor } from "ckeditor5-build-custom";
 import SaveButton from "../utils/save-button.component";
+import Unauthorized from "../auth/unauthorized.component";
 
 class BeatSheet extends React.Component {
   constructor(props) {
     super(props);
 
     // Do nothing if no props
-    if (!this.props.beat_sheet_props) return;
+    if (!this.props.id) return;
 
-    // Receive props
-    const {
-      beat_sheet_name,
-      beat_sheet_description,
-      author_username,
-      author_id,
-      acts,
-    } = this.props.beat_sheet_props;
-
-    // Create new acts
-    const new_acts = acts.map((act) => {
-      // Add uuidv4 to acts
-      const act_uuid = uuidv4();
-      const new_act = {
-        ...act,
-        act_uuid: act_uuid,
-      };
-
-      // Create new beats
-      const new_beats = act.beats.map((beat) => {
-        // Add uuidv4 to beats
-        const beat_uuid = uuidv4();
-        const new_beat = {
-          ...beat,
-          beat_uuid: beat_uuid,
-          act_uuid: act_uuid,
-        };
-        return new_beat;
-      });
-
-      // Set new beats with uuidv4 incldued
-      new_act.beats = new_beats;
-
-      return new_act;
-    });
+    const isAuthenticated = this.props.isAuthenticated;
+    // Beat sheet database ID
+    const id = this.props.id;
 
     this.state = {
-      beat_sheet_name,
-      beat_sheet_description,
-      author_username,
-      author_id,
-      acts: new_acts,
+      exists: null,
+      authorized: null,
+      beat_sheet_name: "",
+      beat_sheet_description: "",
+      author_username: "",
+      author_id: "",
+      acts: [],
+      isAuthenticated: isAuthenticated,
+      id: id,
     };
 
     this.handleAddBeat = this.handleAddBeat.bind(this);
@@ -68,6 +41,95 @@ class BeatSheet extends React.Component {
     this.handleEditAct = this.handleEditAct.bind(this);
     this.handleEditBeatSheet = this.handleEditBeatSheet.bind(this);
     this.handleSaveBeatSheet = this.handleSaveBeatSheet.bind(this);
+    this.handleGetBeatSheet = this.handleGetBeatSheet.bind(this);
+  }
+
+  componentDidMount() {
+    this.handleGetBeatSheet();
+  }
+
+  // Retrieves beat sheet from the server
+  handleGetBeatSheet() {
+    const body = JSON.stringify({ beatSheetID: this.state.id });
+    const options = {
+      method: "POST",
+      mode: "cors",
+      body: body,
+      cache: "default",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    fetch("/beatsheets/get", options)
+      .then((res) => {
+        console.log(res);
+        if (res.status === 200) {
+          this.setState({ exists: true, authorized: true });
+          console.log("Successfully retrieved beat sheet");
+          return res.json();
+        } else if (res.status === 404 || res.status === 400) {
+          console.error("Beat sheet not found");
+          this.setState({ exists: false, authorized: false });
+          return;
+        } else if (res.status === 401 || res.status === 403) {
+          console.error("Not authorized to access this beat sheet");
+          this.setState({ exists: true, authorized: false });
+        } else {
+          console.error("Failure to retrieve beat sheet");
+          this.setState({ exists: false, authorized: false });
+          return;
+        }
+      })
+      .then((result) => {
+        if (!result) {
+          return;
+        }
+
+        // Retrieve results
+        const {
+          beat_sheet_name,
+          beat_sheet_description,
+          author_username,
+          author_id,
+          acts,
+        } = result;
+
+        // Create new acts
+        const new_acts = acts.map((act) => {
+          // Add uuidv4 to acts
+          const act_uuid = uuidv4();
+          const new_act = {
+            ...act,
+            act_uuid: act_uuid,
+          };
+
+          // Create new beats
+          const new_beats = act.beats.map((beat) => {
+            // Add uuidv4 to beats
+            const beat_uuid = uuidv4();
+            const new_beat = {
+              ...beat,
+              beat_uuid: beat_uuid,
+              act_uuid: act_uuid,
+            };
+            return new_beat;
+          });
+
+          // Set new beats with uuidv4 incldued
+          new_act.beats = new_beats;
+
+          return new_act;
+        });
+
+        this.setState({
+          beat_sheet_name,
+          beat_sheet_description,
+          author_username,
+          author_id,
+          acts: new_acts,
+        });
+      });
   }
 
   // Adding a copy of the given beat to the act identified by act_uuid
@@ -212,8 +274,34 @@ class BeatSheet extends React.Component {
 
   // Saves the beat sheet to the server
   handleSaveBeatSheet() {
-    /* TODO: Save to server first */
-    console.log("Saving beat sheet: ", this.state);
+    // Save beat sheet to server
+    const beatSheet = {
+      beat_sheet_name: this.state.beat_sheet_name,
+      beat_sheet_description: this.state.beat_sheet_description,
+      author_username: this.state.author_username,
+      author_id: this.state.author_id,
+      acts: this.state.acts,
+    };
+    const body = JSON.stringify({
+      beatSheetID: this.state.id,
+      beatSheet: beatSheet,
+    });
+    const options = {
+      method: "POST",
+      mode: "cors",
+      body: body,
+      cache: "default",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/beatsheets/update", options).then((res) => {
+      if (res.status === 200) {
+        console.log("Successfully updated beat sheet");
+        // Retrieve new beat sheet from server
+        this.handleGetBeatSheet();
+      }
+    });
   }
 
   renderActs(acts) {
@@ -231,7 +319,16 @@ class BeatSheet extends React.Component {
   }
 
   render() {
-    if (!this.state) return <div>Error 404 not found</div>;
+    if (this.state.exists === null || this.state.authorized === null)
+      return <div>Loading...</div>;
+
+    if (this.state.exists === false) return <div>Error 404 not found</div>;
+
+    // User is not authenticated and not allowed to access this resource
+    if (!this.state.isAuthenticated || !this.state.authorized)
+      return <Unauthorized />;
+
+    // User is authenticated and allowed to access this resource
     return (
       <Container fluid>
         {/* Render basic information about the beat sheet*/}

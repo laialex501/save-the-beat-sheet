@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const passport = require("passport");
 const { generateToken, sendToken } = require("../auth/token-utils");
+const { isLoggedIn } = require("../auth/auth-utils");
 
 // Enable use of environmental variables
 require("dotenv").config();
@@ -18,12 +19,25 @@ router.route("/google").post(
   sendToken
 );
 
+// Logout user
 router
   .route("/logout")
-  .post(passport.authenticate("jwt", { session: false }), (req, res) => {
-    console.log(`Logging out user ${req.user.id}`);
-    res.clearCookie("jwt");
-    return res.status(200).send("Logged out.");
-  });
+  .post(
+    [passport.authenticate("jwt", { session: false }), isLoggedIn],
+    (req, res) => {
+      console.log(`Logging out user ${req.user.id}`);
+      res.clearCookie("jwt");
+      return res.status(200).send("Logged out.");
+    }
+  );
+
+router
+  .route("/verifylogin")
+  .post(
+    [passport.authenticate("jwt", { session: false }), isLoggedIn],
+    (req, res) => {
+      res.status(200).send(req.user);
+    }
+  );
 
 module.exports = router;

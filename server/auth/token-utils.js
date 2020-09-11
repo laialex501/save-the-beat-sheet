@@ -3,7 +3,8 @@ const jwt = require("jsonwebtoken");
 // Enable use of environmental variables
 require("dotenv").config();
 
-const expiration = 60 * 60;
+// Expire in 1 day
+const expiration = 60 * 60 * 24;
 
 const createToken = (user) => {
   const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {

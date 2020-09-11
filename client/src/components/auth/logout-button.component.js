@@ -17,12 +17,13 @@ const Logout = (props) => {
         };
 
         fetch("/auth/logout", options).then((res) => {
-          console.log(res);
           if (res.status === 200) {
-            props.onLogout();
-            history.push("/login");
+            console.log("Successfully logged out");
           }
         });
+
+        props.onLogout();
+        history.push("/login");
       }}
     >
       Log out

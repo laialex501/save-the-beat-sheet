@@ -1,6 +1,4 @@
 import React from "react";
-import Login from "./auth/login.component";
-import LogoutButton from "./auth/logout-button.component";
 
 class Welcome extends React.Component {
   render() {

@@ -43,7 +43,7 @@ const Login = (props) => {
 
                 fetch("/auth/google", options).then((res) => {
                   res.json().then((user) => {
-                    console.log(user);
+                    console.log(`User is: ${user}`);
                     props.onLogin(user);
                     history.push("/beatsheets");
                   });

@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-  useHistory,
-} from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 // Bootstrap components
 import { Navbar, Nav } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
@@ -29,17 +23,67 @@ const dev_user = beatSheetTemplates.dev_user;
 class App extends React.Component {
   constructor() {
     super();
+
+    var isAuthenticated = false;
+    var user = null;
+
+    // isAuthenticated is a string in local storage or does not exist yet
+    isAuthenticated =
+      (localStorage.getItem("isAuthenticated") || "false") === "true";
+    // user is a stringified JSON object in local storage, a null string, or does not exist yet
+    user =
+      (localStorage.getItem("user") || "null") === "null"
+        ? null
+        : JSON.parse(localStorage.getItem("user"));
+
     this.state = {
-      isAuthenticated: false,
-      user: null,
+      isAuthenticated: isAuthenticated,
+      user: user,
     };
 
+    this.verifyLogin = this.verifyLogin.bind(this);
     this.onLogout = this.onLogout.bind(this);
     this.onLogin = this.onLogin.bind(this);
   }
 
+  componentDidMount() {
+    // Verify whether or not user is logged in
+    this.verifyLogin();
+  }
+
+  verifyLogin = () => {
+    // Make request to server to check if jwt token is present as a cookie in our browser
+    const options = {
+      method: "POST",
+      mode: "cors",
+      cache: "default",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/auth/verifylogin", options)
+      .then((res) => {
+        if (res.status === 200) {
+          console.log("JWT cookie is present");
+          return res.json();
+        } else {
+          console.log("JWT cookie is not present");
+          return;
+        }
+      })
+      .then((user) => {
+        if (!user) {
+          this.onLogout();
+        } else {
+          this.onLogin(user);
+        }
+      });
+  };
+
   // On login, set current user
   onLogin = (user) => {
+    localStorage.setItem("isAuthenticated", true);
+    localStorage.setItem("user", JSON.stringify(user));
     this.setState({
       isAuthenticated: true,
       user: user,
@@ -48,6 +92,8 @@ class App extends React.Component {
 
   // On logout, clear current user
   onLogout = () => {
+    localStorage.setItem("isAuthenticated", false);
+    localStorage.setItem("user", null);
     this.setState({
       isAuthenticated: false,
       user: null,
@@ -64,7 +110,7 @@ class App extends React.Component {
     var navbar = this.state.isAuthenticated ? (
       <Nav className="mr-auto">
         <Nav.Link href="/beatsheets">View Beat Sheets</Nav.Link>
-        <Nav.Link href="/beatsheets/example">Example Beat Sheet</Nav.Link>
+        {/*<Nav.Link href="/beatsheets/example">Example Beat Sheet</Nav.Link>*/}
       </Nav>
     ) : (
       <Nav className="mr-auto"></Nav>
@@ -76,15 +122,8 @@ class App extends React.Component {
           <Navbar.Brand href="/">Save the Beat Sheet!</Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="mr-auto">
-              <Nav.Link href="/beatsheets">View Beat Sheets</Nav.Link>
-              <Nav.Link href="/beatsheets/example">Example Beat Sheet</Nav.Link>
-            </Nav>
-            {this.state.isAuthenticated ? (
-              <LogoutButton onLogout={this.onLogout} />
-            ) : (
-              <Button href="/login">Login</Button>
-            )}
+            {navbar}
+            {loginOrLogoutButton}
           </Navbar.Collapse>
         </Navbar>
 
@@ -94,9 +133,8 @@ class App extends React.Component {
             exact
             render={(props) => (
               <Welcome
-                onLogin={this.onLogin}
-                onLogout={this.onLogout}
                 isAuthenticated={this.state.isAuthenticated}
+                key={this.state.isAuthenticated}
               />
             )}
           />
@@ -107,6 +145,7 @@ class App extends React.Component {
               <Login
                 onLogin={this.onLogin}
                 isAuthenticated={this.state.isAuthenticated}
+                key={this.state.isAuthenticated}
               />
             )}
           />
@@ -118,19 +157,21 @@ class App extends React.Component {
                 beat_sheet_list={example_beat_sheet_list}
                 user={dev_user}
                 isAuthenticated={this.state.isAuthenticated}
+                key={this.state.isAuthenticated}
               />
             )}
           />
-          <Route
+          {/*<Route
             path="/beatsheets/example"
             exact
             render={(props) => (
               <BeatSheet
                 beat_sheet_props={example_beat_sheet}
                 isAuthenticated={this.state.isAuthenticated}
+                key={this.state.isAuthenticated}
               ></BeatSheet>
             )}
-          />
+            />*/}
           <Route
             path="/beatsheets/:id"
             render={(props) => (
@@ -138,6 +179,7 @@ class App extends React.Component {
                 beat_sheet_props={example_beat_sheet}
                 id={props.match.params.id}
                 isAuthenticated={this.state.isAuthenticated}
+                key={this.state.isAuthenticated}
               />
             )}
           />

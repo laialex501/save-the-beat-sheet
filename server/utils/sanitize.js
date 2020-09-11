@@ -4,9 +4,47 @@ const { JSDOM } = require("jsdom");
 const window = new JSDOM("").window;
 const DOMPurify = createDOMPurify(window);
 
+const sanitizeHTMLConfig = {
+  allowedTags: [
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "blockquote",
+    "p",
+    "a",
+    "ul",
+    "ol",
+    "nl",
+    "li",
+    "b",
+    "i",
+    "strong",
+    "em",
+    "strike",
+    "abbr",
+    "code",
+    "hr",
+    "br",
+    "div",
+    "table",
+    "thead",
+    "caption",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+    "pre",
+    "iframe",
+    "img",
+  ],
+};
+
 // Sanitizes a html string, first cleaning the HTML and then sanitizing for XSS.
 function sanitize(html) {
-  return DOMPurify.sanitize(sanitizeHTML(html));
+  return DOMPurify.sanitize(sanitizeHTML(html, sanitizeHTMLConfig));
 }
 
 function sanitizeActs(acts) {

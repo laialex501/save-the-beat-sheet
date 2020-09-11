@@ -25,7 +25,7 @@ const isAuthorizedBeatSheet = (req, res, next) => {
     .then((beatSheet) => {
       if (!beatSheet) {
         // Beat sheet not found
-        return res.status(401).send("Beat sheet not found");
+        return res.status(404).send("Beat sheet not found");
       }
 
       // Author id of beat sheet does not match user id from jwt token
