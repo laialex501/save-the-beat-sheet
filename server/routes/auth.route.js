@@ -1,28 +1,29 @@
 const router = require("express").Router();
 const passport = require("passport");
+const { generateToken, sendToken } = require("../auth/token-utils");
 
-router.route("/").get((req, res) => {
-  res.send("Auth!");
-});
+// Enable use of environmental variables
+require("dotenv").config();
 
-// Auth logout
-router.route("/logout").get((req, res) => {
-  // handle with passport
-  res.send("logging out");
-});
-
-// Authenticate with google
-router.route("/google").get(
-  passport.authenticate("google", {
-    scope: ["profile"],
-  })
+router.route("/google").post(
+  passport.authenticate("google-id-token"),
+  (req, res, next) => {
+    // Check if a user was found
+    if (!req.user) {
+      return res.send(401, "User not authenticated");
+    }
+    next();
+  },
+  generateToken,
+  sendToken
 );
 
-// Callback route for google to redirect to
 router
-  .route("/google/redirect")
-  .get(passport.authenticate("google"), (req, res) => {
-    res.send(req.user);
+  .route("/logout")
+  .post(passport.authenticate("jwt", { session: false }), (req, res) => {
+    console.log(`Logging out user ${req.user.id}`);
+    res.clearCookie("jwt");
+    return res.status(200).send("Logged out.");
   });
 
 module.exports = router;

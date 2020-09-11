@@ -1,128 +1,147 @@
 const router = require("express").Router();
 let BeatSheet = require("../models/beat-sheet.model");
-const isLoggedIn = require("../utils/auth-utils").isLoggedIn;
+const passport = require("passport");
 
+// Authentication and authorization middleware
+const { isLoggedIn, isAuthorizedBeatSheet } = require("../auth/auth-utils");
+
+// HTML sanitization utility
 const sanitizeBeatSheet = require("../utils/sanitize").sanitizeBeatSheet;
 
-// TODO: Add input validation and user authorization!!!
-
 // Get Beat Sheets
-router.route("/").get(isLoggedIn, (req, res) => {
-  console.log("Looking for beat sheets belonging to user " + req.user.username);
-  const username = req.body.username;
-  BeatSheet.find({ author_username: username })
-    .then((beatSheet) => res.json(beatSheet))
-    .catch((err) => res.status(400).json("Error: " + err));
-});
-
-// Get all Beat Sheets
-router.route("/api/all").get((req, res) => {
-  // TODO: Remove console.log
-  console.log("Looking for all beat sheets");
-  // TODO: Only display authorized beat sheets
-  BeatSheet.find()
-    .then((beatSheets) => res.json(beatSheets))
-    .catch((err) => res.status(400).json("Error: " + err));
-});
-
-// Get Beat Sheets by Username
-router.route("/api/users/:username").get((req, res) => {
-  const username = req.params.username;
-  // TODO: Remove console.log
-  console.log(`Looking for beats sheets belonging to ${username}`);
-  // TODO: Only display beat sheets if authorized
-  BeatSheet.find({ author_username: username })
-    .then((beatSheet) => res.json(beatSheet))
-    .catch((err) => res.status(400).json("Error: " + err));
-});
-
-// Get Beat Sheets by Author_ID
-router.route("/api/users/id/:author_id").get((req, res) => {
-  const author_id = req.params.author_id;
-  // TODO: Remove console.log
-  console.log(`Looking for beats sheets belonging to ${author_id}`);
-  // TODO: Only display beat sheets if authorized
-  BeatSheet.find({ author_id: author_id })
-    .then((beatSheets) => res.json(beatSheets))
-    .catch((err) => res.status(400).json("Error: " + err));
-});
+router
+  .route("/")
+  .post(
+    [passport.authenticate("jwt", { session: false }), isLoggedIn],
+    (req, res) => {
+      console.log("Looking for beat sheets belonging to user " + req.user.id);
+      const id = req.user.id;
+      BeatSheet.find({ author_id: id })
+        .then((beatSheets) => res.json(beatSheets))
+        .catch((err) => res.status(400).json("Error: " + err));
+    }
+  );
 
 // Get Beat Sheet by ID
-router.route("/api/:id").get((req, res) => {
-  const id = req.params.id;
-  // TODO: Remove console.log
-  console.log(`Looking for beat sheet with id ${id}`);
+router
+  .route("/get")
+  .post(
+    [
+      passport.authenticate("jwt", { session: false }),
+      isLoggedIn,
+      isAuthorizedBeatSheet,
+    ],
+    (req, res) => {
+      console.log(`Looking for beat sheet with id ${req.body.beatSheetID}`);
+      if (!req.beatSheet) {
+        return res.status(401).send("Beat sheet not found");
+      }
 
-  // TODO: Only display beat sheet if authorized
-  BeatSheet.findById(id)
-    .then((beatSheet) => res.json(beatSheet))
-    .catch((err) => res.status(400).json("Error: " + err));
-});
+      return res.json(req.beatSheet);
+    }
+  );
 
-// Create Beat Sheet
-router.route("/api/create").post((req, res) => {
-  // TODO: Remove console.log
-  console.log(`Creating Beat Sheet with content ${req.body}`);
+// Create beat sheet
+router
+  .route("/create")
+  .post(
+    [passport.authenticate("jwt", { session: false }), isLoggedIn],
+    (req, res) => {
+      console.log(
+        `Creating Beat Sheet with content ${req.body.beatSheet} for user ${req.user.username}`
+      );
 
-  const beat_sheet_name = req.body.beat_sheet_name;
-  const beat_sheet_description = req.body.beat_sheet_description;
-  const author_username = req.body.author_username;
-  const author_id = req.body.author_id;
-  const acts = req.body.acts;
+      // Acquire user data
+      const username = req.user.username;
+      const id = req.user.id;
 
-  // Create the new beat sheet
-  const newBeatSheet = new BeatSheet({
-    beat_sheet_name,
-    beat_sheet_description,
-    author_username,
-    author_id,
-    acts,
-  });
+      // Set field data
+      const beatSheet = req.body.beatSheet;
+      const beat_sheet_name = beatSheet.beat_sheet_name;
+      const beat_sheet_description = beatSheet.beat_sheet_description;
+      const acts = beatSheet.acts;
 
-  // Sanitize new beat sheet before saving
-  newBeatSheet = sanitizeBeatSheet(newBeatSheet);
+      // Create the new beat sheet
+      const newBeatSheet = new BeatSheet({
+        beat_sheet_name,
+        beat_sheet_description,
+        acts,
+        author_username: username,
+        author_id: id,
+      });
 
-  newBeatSheet
-    .save()
-    .then(() => res.json("Beat Sheet added!"))
-    .catch((err) => res.status(400).json("Error " + err));
-});
+      // Sanitize new beat sheet before saving
+      newBeatSheet = sanitizeBeatSheet(newBeatSheet);
+
+      newBeatSheet
+        .save()
+        .then(() => res.json(`Beat Sheet for user ${username} added!`))
+        .catch((err) => res.status(400).json("Error " + err));
+    }
+  );
 
 // Update Beat Sheet
-router.route("/api/update/:id").post((req, res) => {
-  const id = req.params.id;
-  // TODO: Remove console.log
-  console.log(`Updating beat sheet with id ${id}`);
-  // TODO: Only update beat sheet if authorized
-  BeatSheet.findById(id)
-    .then((beatSheet) => {
-      // Update sheet values
-      beatSheet.beat_sheet_name = req.body.beat_sheet_name;
-      beatSheet.beat_sheet_description = req.body.beat_sheet_description;
-      beatSheet.author_username = req.body.author_username;
-      beatSheet.author_id = req.body.author_id;
-      beatSheet.acts = req.body.acts;
+router
+  .route("/update")
+  .post(
+    [
+      passport.authenticate("jwt", { session: false }),
+      isLoggedIn,
+      isAuthorizedBeatSheet,
+    ],
+    (req, res) => {
+      // Check if beat sheet is present
+      if (!req.beatSheet) {
+        return res.status(401).send("Beat sheet not found");
+      }
 
-      // Sanitize beat sheet
-      beatSheet = sanitizeBeatSheet(beatSheet);
+      const id = req.body.beatSheetID;
+      console.log(`Updating beat sheet with id ${id}`);
+      BeatSheet.findById(id)
+        .then((beatSheet) => {
+          // Update sheet values
+          beatSheet.beat_sheet_name = req.body.beat_sheet_name;
+          beatSheet.beat_sheet_description = req.body.beat_sheet_description;
+          beatSheet.author_username = req.body.author_username;
+          beatSheet.author_id = req.body.author_id;
+          beatSheet.acts = req.body.acts;
 
-      beatSheet
-        .save()
-        .then(() => res.json(`Beat Sheet ${id} updated`))
+          // Sanitize beat sheet
+          beatSheet = sanitizeBeatSheet(beatSheet);
+
+          // Save Beat Sheet to database
+          beatSheet
+            .save()
+            .then(() => res.json(`Beat Sheet ${id} updated`))
+            .catch((err) => res.status(400).json("Error: " + err));
+        })
         .catch((err) => res.status(400).json("Error: " + err));
-    })
-    .catch((err) => res.status(400).json("Error: " + err));
-});
+    }
+  );
 
 // Delete Beat Sheet
-router.route("/api/:id").delete((req, res) => {
-  const id = req.params.id;
-  // TODO: Remove console.log
-  console.log(`Deleting beat sheet with id ${id}`);
-  // TODO: Only display beat sheet if authorized
-  BeatSheet.findByIdAndDelete(id)
-    .then(res.json(`Beat Sheet ${id} deleted`))
-    .catch((err) => res.status(400).json("Error: " + err));
-});
+router
+  .route("/delete")
+  .delete(
+    [
+      passport.authenticate("jwt", { session: false }),
+      isLoggedIn,
+      isAuthorizedBeatSheet,
+    ],
+    (req, res) => {
+      // Check if beat sheet is present
+      if (!req.beatSheet) {
+        return res.status(401).send("Beat sheet not found");
+      }
+
+      const id = req.body.beatSheetID;
+      console.log(`Deleting beat sheet with id ${id}`);
+
+      // Delete beat sheet
+      BeatSheet.findByIdAndDelete(id)
+        .then(res.json(`Beat Sheet ${id} deleted`))
+        .catch((err) => res.status(400).json("Error: " + err));
+    }
+  );
 
 module.exports = router;

@@ -2,34 +2,43 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-const cookieSession = require("cookie-session");
+const cookieParser = require("cookie-parser");
 const passport = require("passport");
+// const cookieSession = require("cookie-session");
 
 // Run passport config (require syntax runs file)
-const passportConfig = require("./config/passport-config");
+require("./auth/passport-config");
 
 // Allow use of environmental variables
 require("dotenv").config();
 
+// Initialize express app
 const app = express();
 
 // Enable cross-origin resource sharing
-app.use(cors());
+const whitelist = [process.env.CLIENT_DOMAIN, process.env.SERVER_DOMAIN];
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"), false);
+    }
+  },
+  credentials: true,
+  exposedHeaders: ["x-auth-token"],
+};
+app.use(cors(corsOptions));
 
 // Body parsing middleware for requests
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
-// Configure cookie to last 1 day in milliseconds and to be encrypted by a private session cookie key
-app.use(
-  cookieSession({
-    maxAge: 24 * 60 * 60 * 1000,
-    keys: [process.env.SESSION_COOKIE_KEY],
-  })
-);
+// Cookie parsing middleware for requests
+app.use(cookieParser());
 
 // Initialize passport
 app.use(passport.initialize());
-app.use(passport.session());
 
 // DB Config
 const uri = process.env.MONGO_URI;
@@ -47,18 +56,16 @@ connection.once("open", () => console.log("Successfully connected to MongoDB"));
 
 // Router config
 const welcomeRouter = require("./routes/welcome.route");
-const usersRouter = require("./routes/users.route");
 const beatSheetRouter = require("./routes/beat-sheet.route");
 const authRouter = require("./routes/auth.route");
 
 // Set routes
 app.use("/", welcomeRouter);
-app.use("/users", usersRouter);
 app.use("/beatsheets", beatSheetRouter);
 app.use("/auth", authRouter);
 
 // Port config
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || process.env.SERVER_PORT;
 
 // Run server
 app.listen(port, () => console.log(`Server up and running on port ${port}`));
