@@ -1,0 +1,25 @@
+{
+  "name": "save-the-beat-sheet",
+  "version": "1.0.0",
+  "description": "Root directory for Save the Beat Sheet!",
+  "dependencies": {
+    "concurrently": "^5.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "client": "cd client && npm start",
+    "server": "cd server && npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laialex501/save-the-beat-sheet.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/laialex501/save-the-beat-sheet/issues"
+  },
+  "homepage": "https://github.com/laialex501/save-the-beat-sheet#readme"
+}

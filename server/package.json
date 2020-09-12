@@ -26,7 +26,7 @@
     "helmet": "^4.1.1",
     "jsdom": "^16.4.0",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.10.1",
+    "mongoose": "^5.10.5",
     "passport": "^0.4.1",
     "passport-google-id-token": "^0.4.7",
     "passport-jwt": "^4.0.0",
