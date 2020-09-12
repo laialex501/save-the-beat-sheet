@@ -2,6 +2,7 @@ const passport = require("passport");
 const GoogleTokenStrategy = require("passport-google-id-token");
 const JWTStrategy = require("passport-jwt").Strategy;
 const User = require("../models/user.model");
+const debug = require("debug")("passport-config");
 
 // Allow use of environmental variables
 require("dotenv").config();
@@ -22,7 +23,7 @@ passport.deserializeUser((id, done) => {
       // Pass the user we found on to the next stage, attaches user property to request object so we can manage in route handler
       done(null, user);
     })
-    .catch((err) => console.error("Error: " + err));
+    .catch((err) => debug("Error: " + err));
 });
 
 passport.use(
@@ -36,7 +37,7 @@ passport.use(
       User.findOne({ googleID: googleId }).then((user) => {
         if (user) {
           // Already have the user
-          console.log("(Google) User is: ", user);
+          debug("(Google) User is: ", user);
 
           // Callback
           done(null, user);
@@ -53,9 +54,11 @@ passport.use(
           newUser
             .save()
             .then((newUser) => {
-              console.log("(Google) New user created: " + newUser);
+              debug("(Google) New user created: " + newUser);
             })
-            .catch((err) => console.log("Error: " + err));
+            .catch((err) => {
+              debug("Error: " + err);
+            });
 
           // Callback
           done(null, newUser);
@@ -83,24 +86,31 @@ passport.use(
     (jwt_payload, done) => {
       const databaseID = jwt_payload.id;
       // Try to find the user in the database
-      User.findById(databaseID).then((user, err) => {
-        if (err) {
-          // An error occured
-          return done(err, false);
-        }
-        if (user) {
-          // Already have the user
-          // console.log("(JWT) User is: ", user);
+      User.findById(databaseID)
+        .then((user, err) => {
+          if (err) {
+            // An error occured
+            debug("Error: " + err);
+            return done(err, false);
+          }
+          if (user) {
+            // Already have the user
+            // console.log("(JWT) User is: ", user);
 
-          // Callback
-          done(null, user);
-        } else {
-          // If no user was found, jwt_token could not authenticated
+            // Callback
+            debug("User is: ", user);
+            done(null, user);
+          } else {
+            // If no user was found, jwt_token could not authenticated
 
-          // Callback
-          done(null, false);
-        }
-      });
+            // Callback
+            debug("No user found");
+            done(null, false);
+          }
+        })
+        .catch((err) => {
+          debug("Error: " + err);
+        });
     }
   )
 );

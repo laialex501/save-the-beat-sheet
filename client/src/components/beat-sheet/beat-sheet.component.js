@@ -10,6 +10,8 @@ import { InlineEditor, MinimumEditor } from "ckeditor5-build-custom";
 import SaveButton from "../utils/save-button.component";
 import Unauthorized from "../auth/unauthorized.component";
 
+const debug = require("debug")("beat-sheet.component");
+
 class BeatSheet extends React.Component {
   constructor(props) {
     super(props);
@@ -63,20 +65,20 @@ class BeatSheet extends React.Component {
 
     fetch("/beatsheets/get", options)
       .then((res) => {
-        console.log(res);
+        debug(res);
         if (res.status === 200) {
           this.setState({ exists: true, authorized: true });
-          console.log("Successfully retrieved beat sheet");
+          debug("Successfully retrieved beat sheet");
           return res.json();
         } else if (res.status === 404 || res.status === 400) {
-          console.error("Beat sheet not found");
+          debug("Beat sheet not found");
           this.setState({ exists: false, authorized: false });
           return;
         } else if (res.status === 401 || res.status === 403) {
-          console.error("Not authorized to access this beat sheet");
+          debug("Not authorized to access this beat sheet");
           this.setState({ exists: true, authorized: false });
         } else {
-          console.error("Failure to retrieve beat sheet");
+          debug("Failure to retrieve beat sheet");
           this.setState({ exists: false, authorized: false });
           return;
         }
@@ -297,7 +299,7 @@ class BeatSheet extends React.Component {
     };
     fetch("/beatsheets/update", options).then((res) => {
       if (res.status === 200) {
-        console.log("Successfully updated beat sheet");
+        debug("Successfully updated beat sheet");
         // Retrieve new beat sheet from server
         this.handleGetBeatSheet();
       }

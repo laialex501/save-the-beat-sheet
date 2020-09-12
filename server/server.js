@@ -4,7 +4,9 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const passport = require("passport");
-// const cookieSession = require("cookie-session");
+const debug = require("debug")("server");
+const compression = require("compression");
+const helmet = require("helmet");
 
 // Run passport config (require syntax runs file)
 require("./auth/passport-config");
@@ -19,7 +21,8 @@ const app = express();
 const whitelist = [process.env.CLIENT_DOMAIN, process.env.SERVER_DOMAIN];
 const corsOptions = {
   origin: (origin, callback) => {
-    // console.log(origin);
+    // Debug for checking origin of requests
+    debug("origin: " + origin);
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -30,6 +33,9 @@ const corsOptions = {
   exposedHeaders: ["x-auth-token"],
 };
 app.use(cors(corsOptions));
+
+// Middleware to set HTTP headers for protecting against common vulnerabilities
+app.use(helmet());
 
 // Body parsing middleware for requests
 app.use(bodyParser.json());
@@ -54,6 +60,9 @@ mongoose
   .catch((err) => console.log(err));
 const connection = mongoose.connection;
 connection.once("open", () => console.log("Successfully connected to MongoDB"));
+
+// Compress HTTP response of all routes for performance
+app.use(compression());
 
 // Router config
 const welcomeRouter = require("./routes/welcome.route");

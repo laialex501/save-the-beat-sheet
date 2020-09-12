@@ -14,10 +14,11 @@ import LogoutButton from "./components/auth/logout-button.component";
 // Development templates
 import beatSheetTemplates from "./components/utils/beatSheetTemplates";
 
+const debug = require("debug")("App");
+
+// Dev templates
 const example_beat_sheet = beatSheetTemplates.example_beat_sheet;
-
 const example_beat_sheet_list = beatSheetTemplates.example_beat_sheet_list;
-
 const dev_user = beatSheetTemplates.dev_user;
 
 class App extends React.Component {
@@ -64,10 +65,10 @@ class App extends React.Component {
     fetch("/auth/verifylogin", options)
       .then((res) => {
         if (res.status === 200) {
-          console.log("JWT cookie is present");
+          debug("JWT cookie is present");
           return res.json();
         } else {
-          console.log("JWT cookie is not present");
+          debug("JWT cookie is not present");
           return;
         }
       })

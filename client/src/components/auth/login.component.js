@@ -3,6 +3,7 @@ import { useHistory } from "react-router-dom";
 import { GoogleLogin } from "react-google-login";
 import { Container, Row, Col } from "react-bootstrap";
 import keys from "../../config/keys";
+const debug = require("debug")("login.component");
 
 const Login = (props) => {
   const history = useHistory();
@@ -43,14 +44,14 @@ const Login = (props) => {
 
                 fetch("/auth/google", options).then((res) => {
                   res.json().then((user) => {
-                    console.log(`User is: ${user}`);
+                    debug(`User is: ${user}`);
                     props.onLogin(user);
                     history.push("/beatsheets");
                   });
                 });
               }}
               onFailure={(error) => {
-                console.error(error);
+                debug(error);
               }}
             />
           </div>

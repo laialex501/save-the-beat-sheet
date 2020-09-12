@@ -2,6 +2,7 @@ const router = require("express").Router();
 const passport = require("passport");
 const { generateToken, sendToken } = require("../auth/token-utils");
 const { isLoggedIn } = require("../auth/auth-utils");
+const debug = require("debug")("auth.route");
 
 // Enable use of environmental variables
 require("dotenv").config();
@@ -25,7 +26,7 @@ router
   .post(
     [passport.authenticate("jwt", { session: false }), isLoggedIn],
     (req, res) => {
-      console.log(`Logging out user ${req.user.id}`);
+      debug(`Logging out user ${req.user.id}`);
       res.clearCookie("jwt");
       return res.status(200).send("Logged out.");
     }

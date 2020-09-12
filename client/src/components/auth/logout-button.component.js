@@ -1,6 +1,7 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
 import Button from "react-bootstrap/Button";
+const debug = require("debug")("logout-button.component");
 
 const Logout = (props) => {
   const history = useHistory();
@@ -18,7 +19,7 @@ const Logout = (props) => {
 
         fetch("/auth/logout", options).then((res) => {
           if (res.status === 200) {
-            console.log("Successfully logged out");
+            debug("Successfully logged out");
           }
         });
 

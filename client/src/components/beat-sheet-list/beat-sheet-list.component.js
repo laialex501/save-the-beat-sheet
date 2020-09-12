@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import BeatSheetCard from "./beat-sheet-card.component";
 import CreateBeatSheetDropdown from "./create-beat-sheet-dropdown.component";
 import Unauthorized from "../auth/unauthorized.component";
+const debug = require("debug")("beat-sheet-list.component");
 
 class BeatSheetList extends React.Component {
   constructor(props) {
@@ -49,10 +50,10 @@ class BeatSheetList extends React.Component {
     fetch("/beatsheets", options)
       .then((res) => {
         if (res.status === 200) {
-          console.log("Successfully retrieved beat sheets");
+          debug("Successfully retrieved beat sheets");
           return res.json();
         } else {
-          console.error("Failed to retrieve beat sheets");
+          debug("Failed to retrieve beat sheets");
           return;
         }
       })
@@ -103,11 +104,11 @@ class BeatSheetList extends React.Component {
     };
     fetch("/beatsheets/delete", options).then((res) => {
       if (res.status === 200) {
-        console.log("Successfully deleted beat sheet");
+        debug("Successfully deleted beat sheet");
         // Retrieve new beat sheet list from server
         this.handleGetBeatSheets();
       } else {
-        console.error("Failed to delete beat sheet");
+        debug("Failed to delete beat sheet");
       }
     });
   }
@@ -127,7 +128,7 @@ class BeatSheetList extends React.Component {
     };
     fetch("/beatsheets/create", options).then((res) => {
       if (res.status === 200) {
-        console.log("Successfully created beat sheet");
+        debug("Successfully created beat sheet");
         // Retrieve new beat sheet list from server
         this.handleGetBeatSheets();
       }
