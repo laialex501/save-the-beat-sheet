@@ -42,7 +42,7 @@ const Login = (props) => {
                   },
                 };
 
-                fetch("/auth/google", options).then((res) => {
+                fetch("api/auth/google", options).then((res) => {
                   res.json().then((user) => {
                     debug(`User is: ${user}`);
                     props.onLogin(user);

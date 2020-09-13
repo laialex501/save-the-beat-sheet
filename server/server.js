@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const passport = require("passport");
+const path = require("path");
 const debug = require("debug")("server");
 const compression = require("compression");
 const helmet = require("helmet");
@@ -16,9 +17,11 @@ require("dotenv").config();
 
 // Initialize express app
 const app = express();
+debug("Initialized express app");
 
 // Enable cross-origin resource sharing
-const whitelist = [process.env.CLIENT_DOMAIN, process.env.SERVER_DOMAIN];
+const whitelist = process.env.CORS_WHITELIST.split(", ");
+debug("CORS whitelist is: ", whitelist);
 const corsOptions = {
   origin: (origin, callback) => {
     // Debug for checking origin of requests
@@ -65,14 +68,20 @@ connection.once("open", () => console.log("Successfully connected to MongoDB"));
 app.use(compression());
 
 // Router config
-const welcomeRouter = require("./routes/welcome.route");
+//const indexRouter = require("./routes/index.route");
 const beatSheetRouter = require("./routes/beat-sheet.route");
 const authRouter = require("./routes/auth.route");
 
 // Set routes
-app.use("/", welcomeRouter);
-app.use("/beatsheets", beatSheetRouter);
-app.use("/auth", authRouter);
+//app.use("/api/", indexRouter);
+app.use("/api/beatsheets", beatSheetRouter);
+app.use("/api/auth", authRouter);
+
+// If no route is found, send the static React app
+app.use(express.static(path.join(__dirname, "../client/build")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/build"));
+});
 
 // Port config
 const port = process.env.PORT || process.env.SERVER_PORT;
