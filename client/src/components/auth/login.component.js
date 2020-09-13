@@ -2,7 +2,6 @@ import React from "react";
 import { useHistory } from "react-router-dom";
 import { GoogleLogin } from "react-google-login";
 import { Container, Row, Col } from "react-bootstrap";
-import keys from "../../config/keys";
 const debug = require("debug")("login.component");
 
 const Login = (props) => {
@@ -27,7 +26,7 @@ const Login = (props) => {
           </div>
           <div className="mx-auto my-3 align-self-center">
             <GoogleLogin
-              clientId={keys.googleClientID}
+              clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
               buttonText="Login with Google"
               onSuccess={(response) => {
                 const id_token = response.tokenId;

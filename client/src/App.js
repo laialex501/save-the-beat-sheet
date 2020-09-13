@@ -14,6 +14,7 @@ import LogoutButton from "./components/auth/logout-button.component";
 // Development templates
 import beatSheetTemplates from "./components/utils/beatSheetTemplates";
 
+// Allow use of debug logs
 const debug = require("debug")("App");
 
 // Dev templates
