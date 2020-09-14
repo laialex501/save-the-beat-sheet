@@ -63,7 +63,7 @@ class BeatSheet extends React.Component {
       },
     };
 
-    fetch("/beatsheets/get", options)
+    fetch("/api/beatsheets/get", options)
       .then((res) => {
         debug(res);
         if (res.status === 200) {
@@ -297,7 +297,7 @@ class BeatSheet extends React.Component {
         "Content-Type": "application/json",
       },
     };
-    fetch("/beatsheets/update", options).then((res) => {
+    fetch("/api/beatsheets/update", options).then((res) => {
       if (res.status === 200) {
         debug("Successfully updated beat sheet");
         // Retrieve new beat sheet from server

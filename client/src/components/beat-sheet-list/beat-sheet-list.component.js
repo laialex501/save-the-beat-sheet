@@ -47,7 +47,7 @@ class BeatSheetList extends React.Component {
     };
 
     // Retrieve beat sheets from server
-    fetch("/beatsheets", options)
+    fetch("/api/beatsheets", options)
       .then((res) => {
         if (res.status === 200) {
           debug("Successfully retrieved beat sheets");
@@ -102,7 +102,7 @@ class BeatSheetList extends React.Component {
         "Content-Type": "application/json",
       },
     };
-    fetch("/beatsheets/delete", options).then((res) => {
+    fetch("/api/beatsheets/delete", options).then((res) => {
       if (res.status === 200) {
         debug("Successfully deleted beat sheet");
         // Retrieve new beat sheet list from server
@@ -126,7 +126,7 @@ class BeatSheetList extends React.Component {
         "Content-Type": "application/json",
       },
     };
-    fetch("/beatsheets/create", options).then((res) => {
+    fetch("/api/beatsheets/create", options).then((res) => {
       if (res.status === 200) {
         debug("Successfully created beat sheet");
         // Retrieve new beat sheet list from server
