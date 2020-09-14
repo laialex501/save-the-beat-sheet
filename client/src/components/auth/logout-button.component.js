@@ -17,7 +17,7 @@ const Logout = (props) => {
           },
         };
 
-        fetch("api/auth/logout", options).then((res) => {
+        fetch("/auth/logout", options).then((res) => {
           if (res.status === 200) {
             debug("Successfully logged out");
           }

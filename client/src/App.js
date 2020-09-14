@@ -63,7 +63,7 @@ class App extends React.Component {
         "Content-Type": "application/json",
       },
     };
-    fetch("api/auth/verifylogin", options)
+    fetch("/auth/verifylogin", options)
       .then((res) => {
         if (res.status === 200) {
           debug("JWT cookie is present");
