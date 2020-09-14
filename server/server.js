@@ -78,10 +78,10 @@ app.use("/api/beatsheets", beatSheetRouter);
 app.use("/api/auth", authRouter);
 
 // If no route is found, send the static React app
-app.use(express.static(path.join(__dirname, "../client/build")));
-app.get("*", (req, res) => {
+//app.use(express.static(path.join(__dirname, "../client/build")));
+/*app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/build"));
-});
+});*/
 
 // Port config
 const port = process.env.PORT || process.env.SERVER_PORT;
